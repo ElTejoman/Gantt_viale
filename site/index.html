@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Seguimiento de tareas</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/estilos.css" />
+    <script>
+      try {
+        const t = localStorage.getItem('tema');
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
+    <script type="importmap">
+      { "imports": { "three": "./vendor/three.module.min.js" } }
+    </script>
+    <link rel="modulepreload" href="vendor/three.module.min.js" />
+  </head>
+  <body>
+    <main id="login" class="login" hidden>
+      <form id="login-form" class="login-card" autocomplete="off">
+        <div class="login-marca" aria-hidden="true"><i></i><i></i><i></i></div>
+        <h1>Seguimiento de tareas</h1>
+        <p class="tenue">Ingresa la contraseña para ver el tablero.</p>
+        <label class="visually-hidden" for="login-clave">Contraseña</label>
+        <input id="login-clave" type="password" placeholder="Contraseña" autocomplete="current-password" />
+        <p id="login-error" class="login-error" role="alert" hidden></p>
+        <button type="submit" class="btn btn-primario">Entrar</button>
+      </form>
+    </main>
+
+    <div id="app" class="app" hidden>
+      <header class="barra">
+        <div class="marca">
+          <h1 id="titulo">Seguimiento de tareas</h1>
+          <p id="actualizado" class="tenue"></p>
+        </div>
+        <div class="controles">
+          <div class="segmentado" role="group" aria-label="Escala de tiempo">
+            <button data-escala="dia" aria-pressed="false" title="Ver por días (D)">Día</button>
+            <button data-escala="semana" aria-pressed="true" title="Ver por semanas (S)">Semana</button>
+            <button data-escala="mes" aria-pressed="false" title="Ver por meses (M)">Mes</button>
+          </div>
+          <button id="btn-hoy" class="btn" title="Ir a hoy (H)">Hoy</button>
+          <button id="btn-bitacora" class="btn">Bitácora</button>
+          <button id="btn-tema" class="btn-icono"></button>
+          <button id="btn-salir" class="btn-icono" aria-label="Cerrar sesión" title="Cerrar sesión"></button>
+        </div>
+      </header>
+
+      <section class="resumen" aria-label="Resumen">
+        <div class="avance">
+          <span class="avance-etiqueta">Avance global</span>
+          <span id="avance-global" class="avance-cifra">0%</span>
+          <span class="medidor" aria-hidden="true"><i id="avance-medidor"></i></span>
+          <span id="avance-sub" class="avance-sub" title="Promedio ponderado por duración. No incluye tareas continuas ni mensuales."></span>
+        </div>
+        <div id="filtros" class="filtros" role="toolbar" aria-label="Filtrar por estado"></div>
+        <label class="buscador">
+          <span id="icono-buscar" aria-hidden="true"></span>
+          <span class="visually-hidden">Buscar tarea</span>
+          <input id="buscar" type="search" placeholder="Buscar tarea" />
+        </label>
+      </section>
+
+      <section class="tablero">
+        <aside class="lado">
+          <div class="lado-cabecera"><span>Proyecto y tarea</span><span>Avance</span></div>
+          <div id="lado-lista" class="lado-lista"><div id="lado-interior" class="lado-interior"></div></div>
+        </aside>
+        <div class="linea-tiempo">
+          <div id="tl-cabecera" class="tl-cabecera" aria-hidden="true"></div>
+          <div id="tl-lienzo" class="tl-lienzo" tabindex="0" aria-label="Diagrama de Gantt. Usa las flechas para desplazarte y + o − para acercar o alejar."></div>
+        </div>
+        <aside id="panel" class="panel" role="dialog" aria-labelledby="panel-titulo" hidden>
+          <button id="panel-cerrar" class="btn-icono panel-cerrar" aria-label="Cerrar panel"></button>
+          <div id="panel-cuerpo" class="panel-cuerpo"></div>
+        </aside>
+      </section>
+
+      <footer class="leyenda">
+        <ul aria-label="Leyenda">
+          <li><i class="sw sw-pendiente"></i>Pendiente</li>
+          <li><i class="sw sw-en_curso"></i>En curso</li>
+          <li><i class="sw sw-bloqueada"></i>Bloqueada</li>
+          <li><i class="sw sw-terminada"></i>Terminada</li>
+          <li><i class="sw sw-atrasada"></i>Atrasada</li>
+          <li><i class="sw sw-tentativa"></i>Fecha tentativa</li>
+          <li><i class="sw sw-continua"></i>Continua</li>
+          <li><i class="sw sw-mensual"></i>Mensual</li>
+          <li><i class="sw sw-dep"></i>Dependencia</li>
+        </ul>
+        <p class="ayuda">Arrastra para moverte · Ctrl + rueda para acercar · D / S / M cambian la escala</p>
+      </footer>
+      <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>

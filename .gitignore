@@ -1,0 +1,9 @@
+# Datos en texto plano y contraseña: nunca se suben (el repo es público)
+data/*.json
+.env.local
+.env
+
+node_modules/
+.DS_Store
+Thumbs.db
+capturas/

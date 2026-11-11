@@ -1,0 +1,11 @@
+{
+  "name": "gantt-viale",
+  "private": true,
+  "type": "module",
+  "description": "Gantt interactivo de seguimiento de tareas (Three.js, sitio estático para Netlify)",
+  "scripts": {
+    "cifrar": "node scripts/cifrar.mjs",
+    "descifrar": "node scripts/cifrar.mjs --descifrar",
+    "dev": "node scripts/cifrar.mjs && node scripts/servir.mjs"
+  }
+}
