@@ -22,6 +22,21 @@ La contraseña nunca está en el repo ni en el sitio publicado. Sin ella, `tarea
 
 `scripts/leer_logs.mjs` lee los commits y bitácoras de los proyectos fuente, asigna cada registro a una tarea con las reglas de `data/fuentes.json` (privado) y arma `data/arbol.json`. Al cifrar, cada tarea lleva su número de registros y los últimos 3, que la web muestra en el panel de detalle. Pon el ID de la tarea en tus commits (`DEM-6: …`) para que se asignen solos.
 
+## Bandeja de tareas (n8n)
+
+Para anotar una tarea nueva desde cualquier lado (celular incluido) hay un formulario en n8n. Cada envío queda en una bandeja dentro de n8n; `scripts/bandeja.mjs` la trae a `data/bandeja.json` (privado) y le avisa a n8n que ya la tiene. En la siguiente sesión, Claude la organiza en el Gantt.
+
+Instalación (una sola vez):
+
+1. `npm run bandeja:token` genera un token y lo guarda en `.env.local`.
+2. En n8n: *Import from file* → `n8n/bandeja_tareas.json`.
+3. Crea una credencial *Header Auth* con Name `X-Gantt-Token` y Value igual al token. Asígnala a los dos webhooks.
+4. Activa el flujo. La bandeja solo guarda envíos con el flujo activo, no en modo de prueba.
+5. En `.env.local` agrega `N8N_BANDEJA_URL=https://<tu-instancia-n8n>/webhook`.
+6. `npm run bandeja` comprueba la conexión.
+
+El formulario queda en `https://<tu-instancia-n8n>/form/gantt-nueva-tarea`.
+
 ## Actualizar tareas
 
 1. Edita `data/tareas.json`.

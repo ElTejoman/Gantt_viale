@@ -6,6 +6,8 @@
   "scripts": {
     "logs": "node scripts/leer_logs.mjs",
     "logs:sin-tarea": "node scripts/leer_logs.mjs --sin-tarea",
+    "bandeja": "node scripts/bandeja.mjs",
+    "bandeja:token": "node scripts/bandeja.mjs --token",
     "cifrar": "node scripts/cifrar.mjs",
     "descifrar": "node scripts/cifrar.mjs --descifrar",
     "dev": "node scripts/cifrar.mjs && node scripts/servir.mjs"

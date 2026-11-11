@@ -19,6 +19,19 @@ Gantt de seguimiento de tareas que el dueño del repo comparte con su jefe. Siti
 - `npm run logs` muestra el árbol; `npm run logs:sin-tarea` lo que no se pudo asignar.
 - Todo lo de `data/` es privado (gitignored). Las rutas y el mapa tarea → evidencia están en `CLAUDE.local.md`. Los commits del usuario llevan el ID de la tarea (`DEM-1: …`) desde el 2026-11-11.
 
+## Bandeja de tareas desde n8n
+
+El usuario anota tareas nuevas en un formulario de n8n (flujo `n8n/bandeja_tareas.json`). El mismo hook trae lo nuevo a `data/bandeja.json` (privado) y me pasa la lista de **pendientes por organizar** como contexto. Si hay pendientes, los organizo en esa conversación, **antes** de lo que el usuario pida, respetando lo que puso:
+
+1. **Proyecto**: el elegido en el formulario. Si dice "No sé / proyecto nuevo", propongo uno y pregunto antes de crearlo.
+2. **ID**: el siguiente del prefijo del proyecto (`COM-5`, `DEM-7`…). Mismo `nombre` que escribió (solo corrijo tildes o erratas evidentes); el `detalle` va tal cual. Si la prioridad es Alta, el detalle empieza con "Prioridad alta.".
+3. **Fechas**: `inicio` = el día en que llegó (o el siguiente día hábil). Si puso "Para cuándo", ese es el `fin` y no es tentativa. Si no lo puso, estimo un plazo razonable y marco `"tentativa": true`.
+4. **Estado**: `pendiente`, `tipo: "tarea"`. Si eligió "Entregado (ya está hecho)", va al proyecto `entregado` como `terminada`.
+5. Si parece duplicar una tarea existente, no la creo: le pregunto si es la misma.
+6. Marco cada una con `node scripts/bandeja.mjs --organizada <id-bandeja> <ID-tarea>` (o `--descartar <id> "motivo"`), corro `npm run cifrar` y le digo al usuario qué tareas quedaron y dónde. Pregunto antes del push.
+
+- `npm run bandeja` trae y muestra la bandeja. `npm run bandeja:token` crea el token. La URL de n8n y el token están en `.env.local` (`N8N_BANDEJA_URL`, `N8N_BANDEJA_TOKEN`): nunca los escribo en archivos versionados.
+
 ## Reglas
 
 - Nunca escribas la contraseña ni datos de tareas en texto plano en archivos versionados (README, código, commits).

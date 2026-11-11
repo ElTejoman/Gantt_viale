@@ -1,0 +1,154 @@
+{
+  "name": "Gantt · Bandeja de tareas",
+  "nodes": [
+    {
+      "parameters": {
+        "authentication": "none",
+        "formTitle": "Nueva tarea para el Gantt",
+        "formDescription": "Queda en la bandeja y se organiza en el Gantt en la siguiente revisión.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Tarea",
+              "fieldType": "text",
+              "placeholder": "Ej.: Integrar quiebre de stock al dashboard",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Proyecto",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  { "option": "Automata · migración a Intranet" },
+                  { "option": "Demanda" },
+                  { "option": "Planograma" },
+                  { "option": "App Diseño" },
+                  { "option": "Marketing" },
+                  { "option": "RRHH" },
+                  { "option": "Comercial" },
+                  { "option": "Interno" },
+                  { "option": "Entregado (ya está hecho)" },
+                  { "option": "No sé / proyecto nuevo" }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Detalle",
+              "fieldType": "textarea",
+              "placeholder": "Qué hay que hacer, quién lo pidió, de qué depende…"
+            },
+            {
+              "fieldLabel": "Para cuándo",
+              "fieldType": "date"
+            },
+            {
+              "fieldLabel": "Prioridad",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  { "option": "Normal" },
+                  { "option": "Alta" },
+                  { "option": "Baja" }
+                ]
+              }
+            }
+          ]
+        },
+        "responseMode": "onReceived",
+        "options": {
+          "path": "gantt-nueva-tarea",
+          "buttonLabel": "Guardar en la bandeja",
+          "appendAttribution": false,
+          "respondWithOptions": {
+            "values": {
+              "respondWith": "text",
+              "formSubmittedText": "Guardada en la bandeja. Se organiza en el Gantt en la siguiente revisión."
+            }
+          }
+        }
+      },
+      "id": "797539c9-c9b3-49ea-96f4-12de3f31a878",
+      "name": "Formulario: nueva tarea",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [0, 0],
+      "webhookId": "5b0d0408-0c9a-48f7-8507-ecad7445fb15"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Guarda el envío en la bandeja (datos estáticos del flujo).\n// Ojo: solo persiste en ejecuciones de producción (flujo activo), no en pruebas.\nconst bandeja = $getWorkflowStaticData('global');\nbandeja.pendientes = bandeja.pendientes || [];\nbandeja.seq = (bandeja.seq || 0) + 1;\n\nconst f = $input.first().json;\nconst item = {\n  id: `B-${Date.now().toString(36)}-${bandeja.seq}`,\n  recibido: new Date().toISOString(),\n  tarea: String(f['Tarea'] || '').trim(),\n  proyecto: f['Proyecto'] || '',\n  detalle: String(f['Detalle'] || '').trim(),\n  fecha: f['Para cuándo'] || '',\n  prioridad: f['Prioridad'] || 'Normal',\n};\nbandeja.pendientes.push(item);\n\nreturn [{ json: { ok: true, id: item.id, en_bandeja: bandeja.pendientes.length } }];"
+      },
+      "id": "a89b6b79-98be-4b8d-95f4-efc5a87618e0",
+      "name": "Guardar en bandeja",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "gantt-bandeja",
+        "authentication": "headerAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "3c672dbd-f7ab-4851-ae90-087ce268b3c0",
+      "name": "Webhook: leer bandeja",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 220],
+      "webhookId": "3c672dbd-f7ab-4851-ae90-087ce268b3c0"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Devuelve lo que está en la bandeja, sin borrarlo.\nconst bandeja = $getWorkflowStaticData('global');\nreturn [{ json: { pendientes: bandeja.pendientes || [] } }];"
+      },
+      "id": "4bff75b4-6aa9-4784-b68d-ef9600fe93d8",
+      "name": "Listar pendientes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 220]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gantt-bandeja-ok",
+        "authentication": "headerAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "8c19bc5d-5796-42ae-a02f-8d0ee4d64290",
+      "name": "Webhook: confirmar recibidas",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 440],
+      "webhookId": "8c19bc5d-5796-42ae-a02f-8d0ee4d64290"
+    },
+    {
+      "parameters": {
+        "jsCode": "// El Gantt ya guardó estas tareas en su lado: se sacan de la bandeja.\nconst bandeja = $getWorkflowStaticData('global');\nconst cuerpo = $input.first().json.body || {};\nconst ids = new Set(Array.isArray(cuerpo.ids) ? cuerpo.ids : []);\nconst antes = (bandeja.pendientes || []).length;\nbandeja.pendientes = (bandeja.pendientes || []).filter((p) => !ids.has(p.id));\nreturn [{ json: { ok: true, quitadas: antes - bandeja.pendientes.length, quedan: bandeja.pendientes.length } }];"
+      },
+      "id": "0d7f2b1e-6a43-4c55-9b0a-2f9e8c1d3a47",
+      "name": "Sacar de la bandeja",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 440]
+    }
+  ],
+  "connections": {
+    "Formulario: nueva tarea": {
+      "main": [[{ "node": "Guardar en bandeja", "type": "main", "index": 0 }]]
+    },
+    "Webhook: leer bandeja": {
+      "main": [[{ "node": "Listar pendientes", "type": "main", "index": 0 }]]
+    },
+    "Webhook: confirmar recibidas": {
+      "main": [[{ "node": "Sacar de la bandeja", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

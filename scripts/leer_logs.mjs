@@ -283,17 +283,22 @@ function textoNuevos({ nuevos, idsTareas, lecturaAnterior, errores }, maximo = 8
 const esPrincipal = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (esPrincipal) {
   const modoHook = process.argv.includes('--hook');
+  // En modo hook también se trae la bandeja de tareas de n8n (en paralelo; nunca falla).
+  const bandeja = modoHook
+    ? import('./bandeja.mjs').then((m) => m.traerBandeja().then(m.textoBandeja)).catch((e) => `Bandeja de n8n: falló (${e.message}).`)
+    : Promise.resolve('');
   try {
     const r = await leerLogs();
     if (modoHook) {
       const contexto = r.primeraLectura
         ? `Primera lectura de logs: ${r.items.length} registros indexados en data/arbol.json.`
         : textoNuevos(r);
+      const textoBandeja = await bandeja;
       process.stdout.write(
         JSON.stringify({
           hookSpecificOutput: {
             hookEventName: 'UserPromptSubmit',
-            additionalContext: `[Lectura automática de logs para el Gantt — data/arbol.json actualizado]\n${contexto}`,
+            additionalContext: `[Lectura automática de logs para el Gantt — data/arbol.json actualizado]\n${contexto}${textoBandeja ? `\n\n${textoBandeja}` : ''}`,
           },
         }),
       );
@@ -314,7 +319,8 @@ if (esPrincipal) {
     }
   } catch (e) {
     if (modoHook) {
-      process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: `[Lectura automática de logs] Falló: ${e.message}` } }));
+      const textoBandeja = await bandeja;
+      process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: `[Lectura automática de logs] Falló: ${e.message}${textoBandeja ? `\n\n${textoBandeja}` : ''}` } }));
     } else {
       console.error(`✖ ${e.message}`);
       process.exit(1);
