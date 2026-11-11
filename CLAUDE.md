@@ -11,6 +11,10 @@ Gantt de seguimiento de tareas que el dueño del repo comparte con su jefe. Siti
 5. Corre `npm run cifrar`: valida el archivo y regenera `site/tareas.enc.json`. Corrige cualquier error que reporte.
 6. Haz commit solo de `site/tareas.enc.json` (y del código si cambió). Pregunta antes de hacer push.
 
+## Cuando el usuario pide revisar avances en sus proyectos
+
+Las rutas, el mapa tarea → evidencia y el procedimiento están en `CLAUDE.local.md` (privado, no versionado). Los commits del usuario llevan el ID de la tarea (`DEM-1: …`) desde el 2026-11-11.
+
 ## Reglas
 
 - Nunca escribas la contraseña ni datos de tareas en texto plano en archivos versionados (README, código, commits).

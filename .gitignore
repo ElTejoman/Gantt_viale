@@ -2,6 +2,8 @@
 data/*.json
 .env.local
 .env
+CLAUDE.local.md
+.claude/settings.local.json
 
 node_modules/
 .DS_Store
