@@ -16,7 +16,14 @@ function metaTarea(t) {
 }
 
 export function iniciarApp(datos) {
-  const estado = { filtro: 'todas', consulta: '', colapsados: new Set(), sel: null, filas: [], panel: null };
+  const estado = {
+    filtro: 'todas',
+    consulta: '',
+    colapsados: new Set(datos.proyectos.filter((p) => p.colapsado).map((p) => p.id)),
+    sel: null,
+    filas: [],
+    panel: null,
+  };
   const lista = $('#lado-lista');
   const interior = $('#lado-interior');
   const tooltip = $('#tooltip');
@@ -98,6 +105,7 @@ export function iniciarApp(datos) {
           const t = f.tarea;
           return `<button class="fila fila-tarea${t.id === estado.sel ? ' es-sel' : ''}" data-idx="${i}">
             ${icoEstado(t.estado)}<span class="t-nombre">${esc(t.nombre)}</span>${t.atrasada ? icoAtraso : ''}
+            ${t.actividad ? `<span class="t-reg" title="${t.actividad.total} registros en los proyectos">${t.actividad.total}</span>` : ''}
             <span class="t-meta">${metaTarea(t)}</span></button>`;
         })
         .join('');
@@ -149,13 +157,15 @@ export function iniciarApp(datos) {
       const p = fila.proyecto;
       html = `<p class="tt-eyebrow">Proyecto</p><p class="tt-nombre">${esc(p.nombre)}</p>
         <p class="tt-linea">${fmtRango(p.inicio, p.fin)}</p>
-        <p class="tt-linea">${p.tareas.length} tareas · avance ${p.avance == null ? '—' : `${p.avance}%`}</p>`;
+        <p class="tt-linea">${p.tareas.length} tareas · avance ${p.avance == null ? '—' : `${p.avance}%`}</p>
+        ${p.actividad?.total ? `<p class="tt-linea">${p.actividad.total} registros en los proyectos</p>` : ''}`;
     } else {
       const t = fila.tarea;
       html = `<p class="tt-eyebrow">${esc(t.proyectoNombre)}</p><p class="tt-nombre">${esc(t.nombre)}</p>
         <p class="tt-linea">${fmtRango(t.inicio, t.fin)} · ${t.habiles} días hábiles</p>
         <p class="tt-linea">${icoEstado(t.estado)}${ESTADOS[t.estado]}${t.tipo === 'tarea' ? ` · ${t.avance}%` : ` · ${TIPOS[t.tipo]}`}</p>
         ${t.atrasada ? `<p class="tt-linea tt-atraso">${icoAtraso}Atrasada ${t.diasAtraso} ${t.diasAtraso === 1 ? 'día' : 'días'}</p>` : ''}
+        ${t.actividad ? `<p class="tt-linea">${t.actividad.total} registros · último ${fmt(t.actividad.ultimos[0].dia)}</p>` : ''}
         ${t.tentativa ? '<p class="tt-nota">Fecha tentativa</p>' : ''}`;
     }
     tooltip.innerHTML = html;
@@ -253,6 +263,7 @@ export function iniciarApp(datos) {
               .join('')}</ul></section>`
           : ''
       }
+      ${seccionActividad(t)}
       <section><h3>Bitácora</h3>${
         t.actualizaciones.length
           ? `<ol class="bitacora">${t.actualizaciones
@@ -265,6 +276,26 @@ export function iniciarApp(datos) {
       }</section>`,
       t.nombre,
     );
+  }
+
+  function seccionActividad(t) {
+    const a = t.actividad;
+    if (!a) {
+      return datos.actividadHasta
+        ? '<section><h3>Actividad en los proyectos</h3><p class="tenue">Sin registros en los proyectos todavía.</p></section>'
+        : '';
+    }
+    const tipo = { commit: 'Commit', bitacora: 'Bitácora', pipeline: 'Pipeline' };
+    return `<section><h3>Actividad en los proyectos <span class="h3-meta">${a.total}</span></h3>
+      <p class="act-resumen">${a.commits} ${a.commits === 1 ? 'commit' : 'commits'} · ${a.bitacora} ${a.bitacora === 1 ? 'entrada' : 'entradas'} de bitácora</p>
+      <ol class="actividad">${a.ultimos
+        .map(
+          (u) => `<li><div class="act-meta"><time>${fmt(u.dia, true)}</time><span class="act-fuente">${esc(u.repo)} · ${tipo[u.tipo] || u.tipo}</span>${
+            u.estado === 'local' ? '<span class="act-local">solo en local</span>' : ''
+          }</div><p>${esc(u.texto)}</p></li>`,
+        )
+        .join('')}</ol>
+      ${a.total > a.ultimos.length ? `<p class="tenue act-pie">Últimos ${a.ultimos.length} de ${a.total}.</p>` : ''}</section>`;
   }
 
   function abrirBitacora() {

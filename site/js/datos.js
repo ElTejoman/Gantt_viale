@@ -90,6 +90,12 @@ function promedioPonderado(tareas) {
   return Math.round(suma / peso);
 }
 
+// Actividad leída de los logs de los proyectos (commits y bitácoras): total y últimos 3.
+function actividadDe(a) {
+  if (!a?.total) return null;
+  return { ...a, ultimos: (a.ultimos || []).map((u) => ({ ...u, dia: aDia(u.fecha) })) };
+}
+
 export function normalizar(raw, diaHoy) {
   const porId = new Map();
   const todas = [];
@@ -119,6 +125,7 @@ export function normalizar(raw, diaHoy) {
           .sort((x, y) => y.dia - x.dia),
         proyectoId: p.id,
         proyectoNombre: p.nombre,
+        actividad: actividadDe(raw.actividad?.tareas?.[t.id]),
       };
       porId.set(t.id, tarea);
       todas.push(tarea);
@@ -127,6 +134,8 @@ export function normalizar(raw, diaHoy) {
     return {
       id: p.id,
       nombre: p.nombre,
+      colapsado: !!p.colapsado,
+      actividad: raw.actividad?.proyectos?.[p.id] || null,
       tareas,
       inicio: Math.min(...tareas.map((t) => t.inicio)),
       fin: Math.max(...tareas.map((t) => t.fin)),
@@ -145,6 +154,7 @@ export function normalizar(raw, diaHoy) {
     porId,
     min: Math.min(...proyectos.map((p) => p.inicio)),
     max: Math.max(...proyectos.map((p) => p.fin)),
+    actividadHasta: raw.actividad?.hasta ? aDia(raw.actividad.hasta) : null,
     avanceGlobal: promedioPonderado(todas),
     conPlazo: todas.filter((t) => t.tipo === 'tarea').length,
   };

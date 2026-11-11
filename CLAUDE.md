@@ -11,9 +11,13 @@ Gantt de seguimiento de tareas que el dueño del repo comparte con su jefe. Siti
 5. Corre `npm run cifrar`: valida el archivo y regenera `site/tareas.enc.json`. Corrige cualquier error que reporte.
 6. Haz commit solo de `site/tareas.enc.json` (y del código si cambió). Pregunta antes de hacer push.
 
-## Cuando el usuario pide revisar avances en sus proyectos
+## Lectura automática de logs (antes de cualquier cambio)
 
-Las rutas, el mapa tarea → evidencia y el procedimiento están en `CLAUDE.local.md` (privado, no versionado). Los commits del usuario llevan el ID de la tarea (`DEM-1: …`) desde el 2026-11-11.
+- Un hook `UserPromptSubmit` (en `.claude/settings.local.json`) corre `scripts/leer_logs.mjs --hook` en cada mensaje del usuario: lee commits y bitácoras de los proyectos, actualiza `data/arbol.json` y me pasa como contexto los **registros nuevos** desde la última lectura, por tarea. Si aparece algo "SIN TAREA", proponer al usuario si es tarea nueva o falta una regla.
+- `data/arbol.json`: proyecto → tarea → total, commits, entradas de bitácora y últimos 3. `data/logs_estado.json` guarda qué registros ya se vieron. Las reglas de asignación están en `data/fuentes.json` (orden importa; gana la primera; un ID en el commit manda).
+- `npm run cifrar` vuelve a leer los logs (sin marcarlos como vistos) y cifra cada tarea con su conteo y sus 3 últimos registros, que la web muestra en el panel.
+- `npm run logs` muestra el árbol; `npm run logs:sin-tarea` lo que no se pudo asignar.
+- Todo lo de `data/` es privado (gitignored). Las rutas y el mapa tarea → evidencia están en `CLAUDE.local.md`. Los commits del usuario llevan el ID de la tarea (`DEM-1: …`) desde el 2026-11-11.
 
 ## Reglas
 

@@ -9,6 +9,7 @@ import { existsSync } from 'node:fs';
 import { webcrypto as crypto } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { leerLogs, actividadParaWeb, RUTA_ARBOL } from './leer_logs.mjs';
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const RUTA_DATOS = path.join(raiz, 'data', 'tareas.json');
@@ -109,7 +110,23 @@ async function cifrar() {
   const errores = validar(datos);
   if (errores.length) fallar(`Revisa tareas.json:\n  - ${errores.join('\n  - ')}`);
 
-  const plano = JSON.stringify(datos);
+  // Antes de cifrar, se leen los logs de los proyectos para que cada tarea lleve su actividad.
+  let actividad = null;
+  try {
+    const { arbol, errores } = await leerLogs({ marcarVistos: false });
+    actividad = actividadParaWeb(arbol);
+    for (const e of errores) console.warn(`⚠ ${e}`);
+    console.log(`✔ Logs leídos hasta ${arbol.hasta} (${Object.keys(actividad.tareas).length} tareas con actividad, ${arbol.sin_tarea.total} registros sin tarea)`);
+  } catch (e) {
+    if (existsSync(RUTA_ARBOL)) {
+      actividad = actividadParaWeb(JSON.parse(await readFile(RUTA_ARBOL, 'utf8')));
+      console.warn(`⚠ No se pudieron leer los logs (${e.message}); se usa el último árbol guardado.`);
+    } else {
+      console.warn(`⚠ No se pudieron leer los logs (${e.message}); se cifra sin actividad.`);
+    }
+  }
+
+  const plano = JSON.stringify(actividad ? { ...datos, actividad } : datos);
   const nTareas = datos.proyectos.reduce((n, p) => n + p.tareas.length, 0);
 
   if (existsSync(RUTA_CIFRADO)) {
@@ -134,7 +151,9 @@ async function descifrar() {
   const password = await leerPassword();
   let plano;
   try { plano = await descifrarArchivo(password); } catch { fallar('No se pudo descifrar: la contraseña no coincide o el archivo no existe.'); }
-  await writeFile(RUTA_DATOS, JSON.stringify(JSON.parse(plano), null, 2) + '\n');
+  const datos = JSON.parse(plano);
+  delete datos.actividad; // se regenera desde los logs en cada cifrado
+  await writeFile(RUTA_DATOS, JSON.stringify(datos, null, 2) + '\n');
   console.log(`✔ Regenerado ${path.relative(raiz, RUTA_DATOS)}`);
 }
 
