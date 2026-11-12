@@ -26,14 +26,14 @@ La contraseña nunca está en el repo ni en el sitio publicado. Sin ella, `tarea
 
 Para anotar una tarea nueva desde cualquier lado (celular incluido) hay un formulario en n8n. Cada envío queda en una bandeja dentro de n8n; `scripts/bandeja.mjs` la trae a `data/bandeja.json` (privado) y le avisa a n8n que ya la tiene. En la siguiente sesión, Claude la organiza en el Gantt.
 
+El flujo se llama **Gantt · Bandeja de tareas** en n8n y guarda los envíos en la Data Table *Gantt bandeja de tareas* (estado `nuevo` → `recibido`). Sus dos webhooks (`gantt-bandeja` y `gantt-bandeja-ok`) piden la cabecera `X-Gantt-Token`.
+
 Instalación (una sola vez):
 
 1. `npm run bandeja:token` genera un token y lo guarda en `.env.local`.
-2. En n8n: *Import from file* → `n8n/bandeja_tareas.json`.
-3. Crea una credencial *Header Auth* con Name `X-Gantt-Token` y Value igual al token. Asígnala a los dos webhooks.
-4. Activa el flujo. La bandeja solo guarda envíos con el flujo activo, no en modo de prueba.
-5. En `.env.local` agrega `N8N_BANDEJA_URL=https://<tu-instancia-n8n>/webhook`.
-6. `npm run bandeja` comprueba la conexión.
+2. En n8n, crea una credencial *Header Auth* con Name `X-Gantt-Token` y Value igual al token. Asígnala a los dos webhooks y activa el flujo.
+3. En `.env.local` pon `N8N_BANDEJA_URL=https://<tu-instancia-n8n>/webhook`.
+4. `npm run bandeja` comprueba la conexión.
 
 El formulario queda en `https://<tu-instancia-n8n>/form/gantt-nueva-tarea`.
 

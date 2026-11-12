@@ -21,7 +21,7 @@ Gantt de seguimiento de tareas que el dueño del repo comparte con su jefe. Siti
 
 ## Bandeja de tareas desde n8n
 
-El usuario anota tareas nuevas en un formulario de n8n (flujo `n8n/bandeja_tareas.json`). El mismo hook trae lo nuevo a `data/bandeja.json` (privado) y me pasa la lista de **pendientes por organizar** como contexto. Si hay pendientes, los organizo en esa conversación, **antes** de lo que el usuario pida, respetando lo que puso:
+El usuario anota tareas nuevas en un formulario de n8n (flujo "Gantt · Bandeja de tareas", Data Table "Gantt bandeja de tareas"; se edita con el MCP de n8n). El mismo hook trae lo nuevo a `data/bandeja.json` (privado) y me pasa la lista de **pendientes por organizar** como contexto. Si hay pendientes, los organizo en esa conversación, **antes** de lo que el usuario pida, respetando lo que puso:
 
 1. **Proyecto**: el elegido en el formulario. Si dice "No sé / proyecto nuevo", propongo uno y pregunto antes de crearlo.
 2. **ID**: el siguiente del prefijo del proyecto (`COM-5`, `DEM-7`…). Mismo `nombre` que escribió (solo corrijo tildes o erratas evidentes); el `detalle` va tal cual. Si la prioridad es Alta, el detalle empieza con "Prioridad alta.".
