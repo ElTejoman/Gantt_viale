@@ -77,6 +77,47 @@ function validar(datos) {
     }
   }
   for (const [t, d] of dependencias) if (!idsTarea.has(d)) errores.push(`Tarea ${t}: depende de "${d}", que no existe`);
+  errores.push(...validarReuniones(datos, idsTarea));
+  return errores;
+}
+
+const ESTADOS_PENDIENTE = ['abierto', 'cumplido', 'descartado'];
+
+// Reuniones: { id: "R-AAAA-MM-DD[-n]", fecha, titulo, participantes[], acuerdos[], pendientes[] }
+// pendiente: { id: "<reunión>#n", texto, responsable ("yo" u otro nombre), estado, fecha?, tarea?, bloquea?, cierre? }
+function validarReuniones(datos, idsTarea) {
+  const errores = [];
+  const reuniones = datos.reuniones ?? [];
+  if (!Array.isArray(reuniones)) return ['"reuniones" debe ser una lista'];
+  const idsReunion = new Set();
+  for (const r of reuniones) {
+    const c = `Reunión ${r.id ?? '(sin id)'}`;
+    if (!/^R-\d{4}-\d{2}-\d{2}(-\d+)?$/.test(r.id || '')) errores.push(`${c}: el id debe ser R-AAAA-MM-DD (o R-AAAA-MM-DD-2)`);
+    if (idsReunion.has(r.id)) errores.push(`${c}: id repetido`);
+    idsReunion.add(r.id);
+    if (!fechaValida(r.fecha)) errores.push(`${c}: "fecha" inválida (${r.fecha})`);
+    if (!r.titulo) errores.push(`${c}: requiere "titulo"`);
+    if (r.participantes && !Array.isArray(r.participantes)) errores.push(`${c}: "participantes" debe ser una lista`);
+    if (r.acuerdos && !Array.isArray(r.acuerdos)) errores.push(`${c}: "acuerdos" debe ser una lista`);
+    const idsPend = new Set();
+    for (const p of r.pendientes ?? []) {
+      const cp = `${c}, pendiente ${p.id ?? '(sin id)'}`;
+      if (!p.id || !p.id.startsWith(`${r.id}#`)) errores.push(`${cp}: el id debe ser "${r.id}#n"`);
+      if (idsPend.has(p.id)) errores.push(`${cp}: id repetido`);
+      idsPend.add(p.id);
+      if (!p.texto) errores.push(`${cp}: requiere "texto"`);
+      if (!p.responsable) errores.push(`${cp}: requiere "responsable" ("yo" o el nombre de quien lo debe)`);
+      if (!ESTADOS_PENDIENTE.includes(p.estado)) errores.push(`${cp}: estado "${p.estado}" no es uno de ${ESTADOS_PENDIENTE.join(', ')}`);
+      if (p.fecha != null && !fechaValida(p.fecha)) errores.push(`${cp}: "fecha" inválida (${p.fecha})`);
+      for (const k of ['tarea', 'bloquea']) if (p[k] != null && !idsTarea.has(p[k])) errores.push(`${cp}: "${k}" apunta a ${p[k]}, que no existe`);
+      if (p.estado !== 'abierto' && !(p.cierre && fechaValida(p.cierre.fecha))) errores.push(`${cp}: un pendiente cerrado requiere "cierre": { fecha, nota }`);
+    }
+  }
+  for (const p of datos.proyectos) {
+    for (const t of p.tareas ?? []) {
+      for (const o of t.origen ?? []) if (!idsReunion.has(o)) errores.push(`Tarea ${t.id}: "origen" apunta a ${o}, que no existe`);
+    }
+  }
   return errores;
 }
 

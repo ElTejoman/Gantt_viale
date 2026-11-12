@@ -84,6 +84,7 @@ export async function traerBandeja() {
       if (!p?.id || conocidas.has(p.id)) continue;
       const item = {
         id: limpio(p.id, 80),
+        tipo: p.tipo === 'reunion' ? 'reunion' : 'tarea',
         recibido: limpio(p.recibido, 40),
         tarea: limpio(p.tarea, 300),
         proyecto: limpio(p.proyecto, 80),
@@ -91,6 +92,11 @@ export async function traerBandeja() {
         fecha: limpio(p.fecha, 10),
         prioridad: limpio(p.prioridad, 20),
       };
+      if (item.tipo === 'reunion') {
+        item.participantes = limpio(p.participantes, 300);
+        item.acuerdos = limpio(p.acuerdos, 6000);
+        item.pendientes = limpio(p.pendientes, 6000);
+      }
       bandeja.pendientes.push(item);
       res.nuevas.push(item);
       conocidas.add(item.id);
@@ -120,18 +126,26 @@ export function textoBandeja(res) {
     return lineas.join('\n');
   }
   lineas.push(
-    `Bandeja de n8n: ${res.pendientes.length} tarea(s) por organizar en data/tareas.json` +
-      (res.nuevas.length ? ` (${res.nuevas.length} recién llegada(s))` : '') +
+    `Bandeja de n8n: ${res.pendientes.length} envío(s) por organizar en data/tareas.json` +
+      (res.nuevas.length ? ` (${res.nuevas.length} recién llegado(s))` : '') +
       ':',
   );
+  const lista = (txt) => txt.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   for (const p of res.pendientes) {
+    if (p.tipo === 'reunion') {
+      lineas.push(`- ${p.id} · REUNIÓN del ${p.fecha || '?'} · ${p.tarea} [con: ${p.participantes || '?'}${p.proyecto ? ` · proyecto: ${p.proyecto}` : ''}]`);
+      for (const a of lista(p.acuerdos || '')) lineas.push(`    acuerdo: ${a.slice(0, 300)}`);
+      for (const q of lista(p.pendientes || '')) lineas.push(`    pendiente: ${q.slice(0, 300)}`);
+      if (p.detalle) lineas.push(`    notas: ${p.detalle.replace(/\s+/g, ' ').slice(0, 400)}`);
+      continue;
+    }
     const extra = [p.proyecto && `proyecto: ${p.proyecto}`, p.fecha && `para: ${p.fecha}`, p.prioridad && `prioridad: ${p.prioridad}`]
       .filter(Boolean)
       .join(' · ');
     lineas.push(`- ${p.id} · ${p.recibido?.slice(0, 10) || ''} · ${p.tarea}${extra ? ` [${extra}]` : ''}`);
     if (p.detalle) lineas.push(`    detalle: ${p.detalle.replace(/\s+/g, ' ').slice(0, 300)}`);
   }
-  lineas.push('Organizarlas según CLAUDE.md ("Bandeja de tareas desde n8n") y marcarlas con `node scripts/bandeja.mjs --organizada <id> <ID-tarea>`.');
+  lineas.push('Organizarlas según CLAUDE.md ("Bandeja de tareas desde n8n" y "Reuniones") y marcarlas con `node scripts/bandeja.mjs --organizada <id> <ID-tarea o ID-reunión>`.');
   return lineas.join('\n');
 }
 

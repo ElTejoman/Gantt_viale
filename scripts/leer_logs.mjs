@@ -280,6 +280,25 @@ function textoNuevos({ nuevos, idsTareas, lecturaAnterior, errores }, maximo = 8
   return lineas.join('\n');
 }
 
+// Pendientes abiertos de reuniones, para compararlos con los registros nuevos (solo cuando hay registros nuevos).
+export async function pendientesAbiertos() {
+  try {
+    const datos = JSON.parse(await readFile(path.join(raiz, 'data', 'tareas.json'), 'utf8'));
+    const abiertos = (datos.reuniones ?? []).flatMap((r) =>
+      (r.pendientes ?? []).filter((p) => p.estado === 'abierto').map((p) => ({ ...p, reunion: r })),
+    );
+    if (!abiertos.length) return '';
+    const lineas = [`Pendientes de reuniones abiertos (${abiertos.length}): si un registro nuevo de arriba cumple alguno, proponer al usuario cerrarlo con su evidencia.`];
+    for (const p of abiertos.slice(0, 25)) {
+      const extra = [p.responsable !== 'yo' && `lo debe: ${p.responsable}`, p.tarea && `tarea ${p.tarea}`, p.fecha && `para ${p.fecha}`].filter(Boolean).join(' · ');
+      lineas.push(`- ${p.id} (${p.reunion.titulo}) ${p.texto}${extra ? ` [${extra}]` : ''}`);
+    }
+    return lineas.join('\n');
+  } catch {
+    return '';
+  }
+}
+
 const esPrincipal = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (esPrincipal) {
   const modoHook = process.argv.includes('--hook');
@@ -294,11 +313,12 @@ if (esPrincipal) {
         ? `Primera lectura de logs: ${r.items.length} registros indexados en data/arbol.json.`
         : textoNuevos(r);
       const textoBandeja = await bandeja;
+      const textoReuniones = r.nuevos?.length ? await pendientesAbiertos() : '';
       process.stdout.write(
         JSON.stringify({
           hookSpecificOutput: {
             hookEventName: 'UserPromptSubmit',
-            additionalContext: `[Lectura automática de logs para el Gantt — data/arbol.json actualizado]\n${contexto}${textoBandeja ? `\n\n${textoBandeja}` : ''}`,
+            additionalContext: `[Lectura automática de logs para el Gantt — data/arbol.json actualizado]\n${contexto}${textoReuniones ? `\n\n${textoReuniones}` : ''}${textoBandeja ? `\n\n${textoBandeja}` : ''}`,
           },
         }),
       );

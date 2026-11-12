@@ -35,7 +35,12 @@ Instalación (una sola vez):
 3. En `.env.local` pon `N8N_BANDEJA_URL=https://<tu-instancia-n8n>/webhook`.
 4. `npm run bandeja` comprueba la conexión.
 
-El formulario queda en `https://<tu-instancia-n8n>/form/gantt-nueva-tarea`.
+Formularios:
+
+- Tarea nueva: `https://<tu-instancia-n8n>/form/gantt-nueva-tarea`
+- Reunión (acuerdos y pendientes, uno por línea; "Nombre: …" si lo debe otra persona): `https://<tu-instancia-n8n>/form/gantt-nueva-reunion`
+
+Las reuniones quedan en `reuniones` de `tareas.json`. Cada pendiente se enlaza a una tarea (o crea una) y se cierra cuando un commit o un log lo cumple.
 
 ## Actualizar tareas
 

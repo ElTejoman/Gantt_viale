@@ -30,6 +30,30 @@ El usuario anota tareas nuevas en un formulario de n8n (flujo "Gantt · Bandeja 
 5. Si parece duplicar una tarea existente, no la creo: le pregunto si es la misma.
 6. Marco cada una con `node scripts/bandeja.mjs --organizada <id-bandeja> <ID-tarea>` (o `--descartar <id> "motivo"`), corro `npm run cifrar` y le digo al usuario qué tareas quedaron y dónde. Pregunto antes del push.
 
+## Reuniones (acuerdos → pendientes → tareas → evidencia)
+
+Llegan por la misma bandeja (formulario "Reunión", `tipo: reunion`) o el usuario las pega en la conversación. Se guardan en `reuniones` de `data/tareas.json`:
+
+```json
+{ "id": "R-2026-11-13", "fecha": "2026-11-13", "titulo": "Filtrar gráficas del dashboard de KPIs",
+  "participantes": ["Javier"], "proyecto": "comercial", "notas": "…",
+  "acuerdos": ["Se quita el gráfico de UTP del resumen"],
+  "pendientes": [
+    { "id": "R-2026-11-13#1", "texto": "Quitar el gráfico de UTP", "responsable": "yo", "estado": "abierto", "tarea": "COM-3" },
+    { "id": "R-2026-11-13#2", "texto": "Enviar el Excel de cuotas", "responsable": "Javier", "estado": "abierto", "fecha": "2026-11-20", "bloquea": "COM-3" }
+  ] }
+```
+
+Al organizar una reunión:
+
+1. **ID** `R-AAAA-MM-DD` (si hay dos el mismo día, `-2`). Participantes como lista. Acuerdos y pendientes uno por línea, tal como los escribió (solo corrijo tildes).
+2. **Responsable**: si la línea empieza con "Nombre:", es de esa persona; si no, es `"yo"`. Una fecha entre paréntesis (`(20/11)`) va a `fecha`.
+3. **Cada pendiente mío**: si una tarea existente lo cubre, `tarea: "ID"` y agrego el id de la reunión a `origen` de esa tarea. Si no hay ninguna, creo una tarea `pendiente` y `tentativa` en el proyecto que corresponda, con `origen: ["R-…"]`, y la enlazo. Si no está claro, pregunto.
+4. **Pendiente de otra persona**: queda como "esperando a <nombre>". Si frena una tarea mía, `bloquea: "ID"`; si la tarea ya no puede avanzar sin eso, la paso a `bloqueada` y lo digo en su bitácora.
+5. Si la reunión era una tarea del Gantt (como COM-4), esa tarea pasa a `terminada` con una nota que resuma los acuerdos.
+6. **Cierre por evidencia**: cuando el hook muestre registros nuevos junto a "Pendientes de reuniones abiertos", comparo y **propongo** el cierre ("el commit X parece cumplir R-…#2"). Solo con el OK del usuario pongo `estado: "cumplido"` y `cierre: { "fecha", "nota" }` (la nota dice qué lo cumplió, en lenguaje de negocio). `descartado` también lleva `cierre` con el motivo.
+7. Marco el envío con `node scripts/bandeja.mjs --organizada <id-bandeja> R-AAAA-MM-DD`, corro `npm run cifrar` y resumo al usuario: acuerdos, qué pendientes quedaron en qué tareas y qué espera de otros. Pregunto antes del push.
+
 - `npm run bandeja` trae y muestra la bandeja. `npm run bandeja:token` crea el token. La URL de n8n y el token están en `.env.local` (`N8N_BANDEJA_URL`, `N8N_BANDEJA_TOKEN`): nunca los escribo en archivos versionados.
 
 ## Reglas
