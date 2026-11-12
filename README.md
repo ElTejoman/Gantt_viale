@@ -24,7 +24,7 @@ La contraseña nunca está en el repo ni en el sitio publicado. Sin ella, `tarea
 
 ## Bandeja de tareas (n8n)
 
-Para anotar una tarea nueva desde cualquier lado (celular incluido) hay un formulario en n8n. Cada envío queda en una bandeja dentro de n8n; `scripts/bandeja.mjs` la trae a `data/bandeja.json` (privado) y le avisa a n8n que ya la tiene. En la siguiente sesión, Claude la organiza en el Gantt.
+Para anotar una tarea nueva o una reunión desde cualquier lado (celular incluido) hay un formulario en n8n. Cada envío queda en una bandeja dentro de n8n; `scripts/bandeja.mjs` la trae a `data/bandeja.json` (privado) y le avisa a n8n que ya la tiene. En la siguiente sesión, Claude la organiza en el Gantt.
 
 El flujo se llama **Gantt · Bandeja de tareas** en n8n y guarda los envíos en la Data Table *Gantt bandeja de tareas* (estado `nuevo` → `recibido`). Sus dos webhooks (`gantt-bandeja` y `gantt-bandeja-ok`) piden la cabecera `X-Gantt-Token`.
 
@@ -35,10 +35,10 @@ Instalación (una sola vez):
 3. En `.env.local` pon `N8N_BANDEJA_URL=https://<tu-instancia-n8n>/webhook`.
 4. `npm run bandeja` comprueba la conexión.
 
-Formularios:
+Formulario: `https://<tu-instancia-n8n>/form/gantt-nueva-tarea`. La primera página pregunta si es una **tarea nueva** o una **reunión** y el proyecto; la segunda pide los datos de cada una.
 
-- Tarea nueva: `https://<tu-instancia-n8n>/form/gantt-nueva-tarea`
-- Reunión (acuerdos y pendientes, uno por línea; "Nombre: …" si lo debe otra persona; `[ID]` al final si va a una tarea distinta de la "Tarea relacionada"): `https://<tu-instancia-n8n>/form/gantt-nueva-reunion`. Sus pendientes ya crean o enlazan tareas: no hace falta llenar también el de tareas.
+- Tarea: nombre, detalle, para cuándo y prioridad.
+- Reunión: fecha, tema, con quién, tarea relacionada (opcional), acuerdos y pendientes (uno por línea; "Nombre: …" si lo debe otra persona; `[ID]` al final si va a una tarea distinta de la relacionada) y notas. Sus pendientes crean o enlazan tareas por sí solos.
 
 Las reuniones quedan en `reuniones` de `tareas.json`. Cada pendiente se enlaza a una tarea (o crea una) y se cierra cuando un commit o un log lo cumple.
 
