@@ -93,6 +93,7 @@ export async function traerBandeja() {
         prioridad: limpio(p.prioridad, 20),
       };
       if (item.tipo === 'reunion') {
+        item.tareaRelacionada = limpio(p.tarea_relacionada, 80);
         item.participantes = limpio(p.participantes, 300);
         item.acuerdos = limpio(p.acuerdos, 6000);
         item.pendientes = limpio(p.pendientes, 6000);
@@ -133,7 +134,7 @@ export function textoBandeja(res) {
   const lista = (txt) => txt.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   for (const p of res.pendientes) {
     if (p.tipo === 'reunion') {
-      lineas.push(`- ${p.id} · REUNIÓN del ${p.fecha || '?'} · ${p.tarea} [con: ${p.participantes || '?'}${p.proyecto ? ` · proyecto: ${p.proyecto}` : ''}]`);
+      lineas.push(`- ${p.id} · REUNIÓN del ${p.fecha || '?'} · ${p.tarea} [con: ${p.participantes || '?'}${p.proyecto ? ` · proyecto: ${p.proyecto}` : ''}${p.tareaRelacionada ? ` · tarea: ${p.tareaRelacionada}` : ''}]`);
       for (const a of lista(p.acuerdos || '')) lineas.push(`    acuerdo: ${a.slice(0, 300)}`);
       for (const q of lista(p.pendientes || '')) lineas.push(`    pendiente: ${q.slice(0, 300)}`);
       if (p.detalle) lineas.push(`    notas: ${p.detalle.replace(/\s+/g, ' ').slice(0, 400)}`);

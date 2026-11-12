@@ -38,7 +38,7 @@ Instalación (una sola vez):
 Formularios:
 
 - Tarea nueva: `https://<tu-instancia-n8n>/form/gantt-nueva-tarea`
-- Reunión (acuerdos y pendientes, uno por línea; "Nombre: …" si lo debe otra persona): `https://<tu-instancia-n8n>/form/gantt-nueva-reunion`
+- Reunión (acuerdos y pendientes, uno por línea; "Nombre: …" si lo debe otra persona; `[ID]` al final si va a una tarea distinta de la "Tarea relacionada"): `https://<tu-instancia-n8n>/form/gantt-nueva-reunion`. Sus pendientes ya crean o enlazan tareas: no hace falta llenar también el de tareas.
 
 Las reuniones quedan en `reuniones` de `tareas.json`. Cada pendiente se enlaza a una tarea (o crea una) y se cierra cuando un commit o un log lo cumple.
 
