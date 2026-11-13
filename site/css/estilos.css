@@ -567,6 +567,17 @@ p {
   padding-left: 38px;
   color: var(--ink);
 }
+.fila-espejo {
+  color: var(--muted);
+}
+.fila-espejo .st {
+  color: var(--muted);
+}
+.t-de {
+  flex: none;
+  font-size: 11.5px;
+  color: var(--muted);
+}
 .fila.es-pasar {
   background: var(--gantt-hover);
 }
@@ -737,6 +748,7 @@ p {
   padding: 22px 24px 32px;
   display: grid;
   align-content: start;
+  grid-auto-rows: max-content;
   gap: 16px;
 }
 .panel-cuerpo h2 {
@@ -805,6 +817,9 @@ p {
 .datos div {
   background: var(--surface);
   padding: 10px 12px;
+}
+.datos div:last-child:nth-child(odd) {
+  grid-column: span 2;
 }
 .datos dt {
   font-size: 11.5px;

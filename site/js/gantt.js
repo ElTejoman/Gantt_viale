@@ -261,7 +261,8 @@ export class VistaGantt {
         it.banda.renderOrder = 0;
         this.dinamico.add(it.banda);
       } else {
-        this.porId.set(fila.tarea.id, it);
+        // Una fila espejo (la tarea vista desde el proyecto que beneficia) no reemplaza a la original.
+        if (!fila.espejo || !this.porId.has(fila.tarea.id)) this.porId.set(fila.tarea.id, it);
         it.marcas = fila.tarea.marcas.map(() => {
           const m = new THREE.Mesh(this.plano, materialBarra());
           m.rotation.z = Math.PI / 4;
@@ -271,7 +272,7 @@ export class VistaGantt {
           return m;
         });
         // Línea base: las fechas que se planificaron al inicio, como una línea bajo la barra.
-        if (fila.tarea.plan) {
+        if (fila.tarea.plan && !fila.espejo) {
           it.base = new THREE.Mesh(this.plano, materialBarra());
           it.base.renderOrder = 5;
           it.base.material.uniforms.uRadius.value = 1.5;
@@ -343,6 +344,8 @@ export class VistaGantt {
       }
       u.uHatch.value = t.tentativa ? 1 : 0;
       u.uFade.value = t.tipo === 'continua' ? 1 : 0;
+      u.uOpacity.value = it.fila.espejo ? 0.4 : 1;
+      for (const m of it.marcas) m.material.uniforms.uOpacity.value = u.uOpacity.value;
       if (it.base) {
         const ub = it.base.material.uniforms;
         ub.uTrack.value.copy(this.colores.planRelleno);
@@ -735,7 +738,7 @@ export class VistaGantt {
     const segs = [];
     const tris = [];
     for (const it of this.items) {
-      if (it.fila.tipo !== 'tarea') continue;
+      if (it.fila.tipo !== 'tarea' || it.fila.espejo) continue;
       const t = it.fila.tarea;
       for (const pre of t.dependeDe) {
         const ip = this.porId.get(pre.id);

@@ -65,6 +65,10 @@ function validar(datos) {
       if (!fechaValida(t.fin)) errores.push(`${c}: "fin" inválido (${t.fin})`);
       if (fechaValida(t.inicio) && fechaValida(t.fin) && t.fin < t.inicio) errores.push(`${c}: "fin" es anterior a "inicio"`);
       if (t.plan && !(fechaValida(t.plan.inicio) && fechaValida(t.plan.fin) && t.plan.fin >= t.plan.inicio)) errores.push(`${c}: "plan" debe ser { inicio, fin } con fechas AAAA-MM-DD`);
+      for (const b of t.beneficia ?? []) {
+        if (!datos.proyectos.some((o) => o.id === b)) errores.push(`${c}: "beneficia" menciona el proyecto "${b}", que no existe`);
+        else if (b === p.id) errores.push(`${c}: "beneficia" no puede ser su propio proyecto`);
+      }
       if (t.estado && !ESTADOS.includes(t.estado)) errores.push(`${c}: estado "${t.estado}" no es uno de ${ESTADOS.join(', ')}`);
       if (t.tipo && !TIPOS.includes(t.tipo)) errores.push(`${c}: tipo "${t.tipo}" no es uno de ${TIPOS.join(', ')}`);
       if (t.avance != null && (typeof t.avance !== 'number' || t.avance < 0 || t.avance > 100)) errores.push(`${c}: "avance" debe ser un número entre 0 y 100`);

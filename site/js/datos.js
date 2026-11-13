@@ -157,6 +157,8 @@ export function normalizar(raw, diaHoy) {
   });
 
   for (const t of todas) t.dependeDe = (t.depende || []).map((id) => porId.get(id)).filter(Boolean);
+  const nombreProyecto = new Map(proyectos.map((p) => [p.id, p.nombre]));
+  for (const t of todas) t.beneficiaNombres = (t.beneficia || []).map((id) => nombreProyecto.get(id)).filter(Boolean);
 
   return {
     titulo: raw.titulo || 'Seguimiento de tareas',
@@ -192,15 +194,18 @@ export function contar(tareas) {
 export function construirFilas(proyectos, { filtro, consulta, colapsados }) {
   const q = normalizarTexto(consulta.trim());
   const prueba = FILTROS[filtro].prueba;
+  const pasa = (t) => prueba(t) && (!q || normalizarTexto(`${t.nombre} ${t.detalle || ''} ${t.proyectoNombre} ${t.id}`).includes(q));
   const filas = [];
   for (const p of proyectos) {
-    const visibles = p.tareas.filter(
-      (t) => prueba(t) && (!q || normalizarTexto(`${t.nombre} ${t.detalle || ''} ${p.nombre} ${t.id}`).includes(q)),
-    );
-    if (!visibles.length) continue;
+    const visibles = p.tareas.filter(pasa);
+    // Espejos: tareas de otros proyectos que benefician a este (se ven atenuadas y no suman a su avance).
+    const espejos = proyectos.flatMap((o) => (o.id === p.id ? [] : o.tareas.filter((t) => t.beneficia?.includes(p.id) && pasa(t))));
+    if (!visibles.length && !espejos.length) continue;
     const colapsado = colapsados.has(p.id);
     filas.push({ tipo: 'grupo', proyecto: p, visibles: visibles.length, colapsado });
-    if (!colapsado) for (const t of visibles) filas.push({ tipo: 'tarea', tarea: t, proyecto: p });
+    if (colapsado) continue;
+    for (const t of visibles) filas.push({ tipo: 'tarea', tarea: t, proyecto: p });
+    for (const t of espejos) filas.push({ tipo: 'tarea', tarea: t, proyecto: p, espejo: true });
   }
   return filas;
 }

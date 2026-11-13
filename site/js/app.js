@@ -103,6 +103,11 @@ export function iniciarApp(datos) {
               <span class="g-avance">${p.avance == null ? '—' : `${p.avance}%`}</span></button>`;
           }
           const t = f.tarea;
+          if (f.espejo) {
+            return `<button class="fila fila-tarea fila-espejo${t.id === estado.sel ? ' es-sel' : ''}" data-idx="${i}" title="Tarea de ${esc(t.proyectoNombre)} que beneficia a ${esc(f.proyecto.nombre)}">
+            <span class="st">${iconos.enlace}</span><span class="t-nombre">${esc(t.nombre)}</span>
+            <span class="t-de">${esc(t.proyectoNombre.split(' · ')[0])}</span></button>`;
+          }
           return `<button class="fila fila-tarea${t.id === estado.sel ? ' es-sel' : ''}" data-idx="${i}">
             ${icoEstado(t.estado)}<span class="t-nombre">${esc(t.nombre)}</span>${t.atrasada ? icoAtraso : ''}
             ${t.actividad ? `<span class="t-reg" title="${t.actividad.total} registros en los proyectos">${t.actividad.total}</span>` : ''}
@@ -165,6 +170,7 @@ export function iniciarApp(datos) {
         <p class="tt-linea">${fmtRango(t.inicio, t.fin)} · ${t.habiles} días hábiles</p>
         <p class="tt-linea">${icoEstado(t.estado)}${ESTADOS[t.estado]}${t.tipo === 'tarea' ? ` · ${t.avance}%` : ` · ${TIPOS[t.tipo]}`}</p>
         ${t.atrasada ? `<p class="tt-linea tt-atraso">${icoAtraso}Atrasada ${t.diasAtraso} ${t.diasAtraso === 1 ? 'día' : 'días'}</p>` : ''}
+        ${t.beneficiaNombres.length ? `<p class="tt-linea">Para: ${esc(t.beneficiaNombres.join(', '))}</p>` : ''}
         ${t.plan ? `<p class="tt-linea">Plan original: ${fmtRango(t.plan.inicio, t.plan.fin)}</p><p class="tt-linea">${textoDesvio(t)}</p>` : ''}
         ${t.actividad ? `<p class="tt-linea">${t.actividad.total} registros · último ${fmt(t.actividad.ultimos[0].dia)}</p>` : ''}
         ${t.tentativa ? '<p class="tt-nota">Fecha tentativa</p>' : ''}`;
@@ -209,7 +215,12 @@ export function iniciarApp(datos) {
     vista.establecerSeleccion(id);
     for (const el of interior.querySelectorAll('.es-sel')) el.classList.remove('es-sel');
 
-    let idx = estado.filas.findIndex((f) => f.tipo === 'tarea' && f.tarea.id === id);
+    // Preferir la fila original sobre su espejo en otro proyecto.
+    const indiceDe = () => {
+      const i = estado.filas.findIndex((f) => f.tipo === 'tarea' && f.tarea.id === id && !f.espejo);
+      return i >= 0 ? i : estado.filas.findIndex((f) => f.tipo === 'tarea' && f.tarea.id === id);
+    };
+    let idx = indiceDe();
     if (idx < 0) {
       // La tarea está oculta por filtro o grupo colapsado: mostrarla.
       estado.filtro = 'todas';
@@ -218,7 +229,7 @@ export function iniciarApp(datos) {
       estado.colapsados.delete(t.proyectoId);
       pintarResumen();
       pintarFilas();
-      idx = estado.filas.findIndex((f) => f.tipo === 'tarea' && f.tarea.id === id);
+      idx = indiceDe();
     }
     const el = elementosFila[idx];
     el?.classList.add('es-sel');
@@ -242,6 +253,7 @@ export function iniciarApp(datos) {
         <div><dt>Fin</dt><dd>${fmt(t.fin, true)}</dd></div>
         <div><dt>Duración</dt><dd>${t.habiles} días hábiles</dd></div>
         <div><dt>Tipo</dt><dd>${TIPOS[t.tipo]}</dd></div>
+        ${t.beneficiaNombres.length ? `<div><dt>Para</dt><dd>${esc(t.beneficiaNombres.join(', '))}</dd></div>` : ''}
       </dl>
       ${t.tentativa ? '<p class="nota-tentativa"><span class="trama"></span>Las fechas son tentativas y pueden ajustarse.</p>' : ''}
       ${t.plan ? `<p class="nota-tentativa"><span class="linea-plan"></span><span>Plan original: ${fmtRango(t.plan.inicio, t.plan.fin)}. <b>${textoDesvio(t)}.</b></span></p>` : ''}

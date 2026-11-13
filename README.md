@@ -64,6 +64,7 @@ Si pierdes `data/tareas.json`, regenéralo desde la versión cifrada con `npm ru
   "avance": 40,
   "tentativa": false,
   "plan": { "inicio": "2026-11-16", "fin": "2026-12-04" },
+  "beneficia": ["comercial"],
   "tipo": "tarea",
   "depende": ["DEM-0"],
   "detalle": "Texto libre",
@@ -76,6 +77,7 @@ Si pierdes `data/tareas.json`, regenéralo desde la versión cifrada con `npm ru
 - `estado`: `pendiente` · `en_curso` · `bloqueada` · `terminada`
 - `tipo`: `tarea` (con plazo, cuenta para el avance global) · `continua` · `recurrente` (marca cada fin de mes)
 - `plan` (opcional) es la línea base: las fechas que se planificaron al inicio. Se dibuja como una barra hueca bajo la barra real, y el panel dice cuántos días antes o después terminó.
+- `beneficia` (opcional): ids de otros proyectos que aprovechan la tarea. La tarea se queda en su proyecto y además aparece atenuada (fila espejo) dentro de cada uno de esos proyectos, sin sumar a su avance. El panel dice "Para: …".
 - Si no pones `avance`, se calcula desde `checklist` o `conteo`.
 - Una tarea con plazo se marca **atrasada** automáticamente si pasó su fecha de fin y no está terminada.
 

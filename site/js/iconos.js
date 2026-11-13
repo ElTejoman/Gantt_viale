@@ -29,5 +29,6 @@ export const iconos = {
   ),
   buscar: svg('<circle cx="7" cy="7" r="4.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10.2 10.2l3.3 3.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'),
   check: svg('<path d="M3.5 8.4l2.9 2.9 6.1-6.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>'),
+  enlace: svg('<path d="M6 3.5H3.5v9h9V10M9 3.5h3.5V7M12.5 3.5L7.5 8.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>'),
   vacio: svg('<rect x="3" y="3" width="10" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.4"/>'),
 };
