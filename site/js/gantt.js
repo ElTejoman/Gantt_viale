@@ -8,6 +8,7 @@ export const FILA = 40;
 const ALTO_BARRA = 16;
 const ALTO_RESUMEN = 6;
 const ALTO_RECURRENTE = 2;
+const ALTO_BASE = 6;
 const DIAMANTE = 10;
 
 export const ESCALAS = { dia: 36, semana: 12, mes: 3.2 };
@@ -247,7 +248,7 @@ export class VistaGantt {
 
   establecerFilas(filas) {
     for (const it of this.items) {
-      for (const m of [it.barra, ...(it.marcas || [])]) m.material.dispose();
+      for (const m of [it.barra, it.base, ...(it.marcas || [])]) m?.material.dispose();
     }
     this.dinamico.clear();
     this.porId.clear();
@@ -269,6 +270,13 @@ export class VistaGantt {
           this.dinamico.add(m);
           return m;
         });
+        // Línea base: las fechas que se planificaron al inicio, como una línea bajo la barra.
+        if (fila.tarea.plan) {
+          it.base = new THREE.Mesh(this.plano, materialBarra());
+          it.base.renderOrder = 5;
+          it.base.material.uniforms.uRadius.value = 1.5;
+          this.dinamico.add(it.base);
+        }
       }
       it.barra = new THREE.Mesh(this.plano, materialBarra());
       it.barra.renderOrder = 6;
@@ -287,6 +295,8 @@ export class VistaGantt {
       atraso: c('--st-atrasada'),
       bordePendiente: c('--bar-pendiente-ring'),
       recurrente: c('--gantt-rec'),
+      plan: c('--gantt-plan'),
+      planRelleno: c('--gantt-plan-fill'),
       marca: c('--sum-fill'),
       resumen: { pista: c('--sum-track'), relleno: c('--sum-fill') },
       estados: Object.fromEntries(
@@ -333,6 +343,13 @@ export class VistaGantt {
       }
       u.uHatch.value = t.tentativa ? 1 : 0;
       u.uFade.value = t.tipo === 'continua' ? 1 : 0;
+      if (it.base) {
+        const ub = it.base.material.uniforms;
+        ub.uTrack.value.copy(this.colores.planRelleno);
+        ub.uFill.value.copy(this.colores.planRelleno);
+        ub.uRing.value = 1;
+        ub.uRingColor.value.copy(this.colores.plan);
+      }
     }
     this.sucio = true;
   }
@@ -423,8 +440,9 @@ export class VistaGantt {
       x0 = X(it.fila.proyecto.inicio);
       x1 = X(it.fila.proyecto.fin + 1);
     } else {
-      x0 = X(it.fila.tarea.inicio);
-      x1 = X(it.fila.tarea.fin + 1);
+      const t = it.fila.tarea;
+      x0 = X(Math.min(t.inicio, t.plan?.inicio ?? Infinity));
+      x1 = X(Math.max(t.fin, t.plan?.fin ?? -Infinity) + 1);
     }
     const sobreBarra = mx >= x0 - 6 && mx <= Math.max(x1, x0 + 4) + 6;
     return { idx, fila: it.fila, sobreBarra };
@@ -676,6 +694,15 @@ export class VistaGantt {
           mesh.material.uniforms.uRing.value = sel || pasar ? 1 : 0;
           mesh.material.uniforms.uRingColor.value.copy(this.colores.tinta);
         });
+
+        if (it.base) {
+          const bx0 = X(t.plan.inicio);
+          const bw = Math.max(X(t.plan.fin + 1) - bx0, 3) * g;
+          it.base.visible = visible && bx0 + bw > -10 && bx0 < W + 10 && bw > 0.5;
+          it.base.position.set(bx0 + bw / 2, cy - ALTO_BARRA / 2 - ALTO_BASE / 2 - 2, 0);
+          it.base.scale.set(bw, ALTO_BASE, 1);
+          it.base.material.uniforms.uSize.value.set(bw, ALTO_BASE);
+        }
       }
       const w = Math.max(x1 - x0, 3) * g;
       it.barra.visible = visible && x0 + w > -10 && x0 < W + 10 && w > 0.5;

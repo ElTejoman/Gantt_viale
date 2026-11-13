@@ -1,5 +1,5 @@
 import { VistaGantt, FILA } from './gantt.js';
-import { ESTADOS, TIPOS, FILTROS, construirFilas, contar, fmt, fmtRango } from './datos.js';
+import { ESTADOS, TIPOS, FILTROS, construirFilas, contar, fmt, fmtRango, textoDesvio } from './datos.js';
 import { iconos } from './iconos.js';
 
 const $ = (s) => document.querySelector(s);
@@ -165,6 +165,7 @@ export function iniciarApp(datos) {
         <p class="tt-linea">${fmtRango(t.inicio, t.fin)} · ${t.habiles} días hábiles</p>
         <p class="tt-linea">${icoEstado(t.estado)}${ESTADOS[t.estado]}${t.tipo === 'tarea' ? ` · ${t.avance}%` : ` · ${TIPOS[t.tipo]}`}</p>
         ${t.atrasada ? `<p class="tt-linea tt-atraso">${icoAtraso}Atrasada ${t.diasAtraso} ${t.diasAtraso === 1 ? 'día' : 'días'}</p>` : ''}
+        ${t.plan ? `<p class="tt-linea">Plan original: ${fmtRango(t.plan.inicio, t.plan.fin)}</p><p class="tt-linea">${textoDesvio(t)}</p>` : ''}
         ${t.actividad ? `<p class="tt-linea">${t.actividad.total} registros · último ${fmt(t.actividad.ultimos[0].dia)}</p>` : ''}
         ${t.tentativa ? '<p class="tt-nota">Fecha tentativa</p>' : ''}`;
     }
@@ -243,6 +244,7 @@ export function iniciarApp(datos) {
         <div><dt>Tipo</dt><dd>${TIPOS[t.tipo]}</dd></div>
       </dl>
       ${t.tentativa ? '<p class="nota-tentativa"><span class="trama"></span>Las fechas son tentativas y pueden ajustarse.</p>' : ''}
+      ${t.plan ? `<p class="nota-tentativa"><span class="linea-plan"></span><span>Plan original: ${fmtRango(t.plan.inicio, t.plan.fin)}. <b>${textoDesvio(t)}.</b></span></p>` : ''}
       ${t.detalle ? `<section><h3>Detalle</h3><p>${esc(t.detalle)}</p></section>` : ''}
       ${
         t.conteo

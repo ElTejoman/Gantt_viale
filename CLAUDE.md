@@ -8,6 +8,7 @@ Gantt de seguimiento de tareas que el dueño del repo comparte con su jefe. Siti
 2. Actualiza `"actualizado"` con la fecha de hoy.
 3. Por cada avance, agrega una entrada en `actualizaciones` (`fecha`, `nota` y `avance` si aplica) y ajusta `estado` / `avance` / `checklist` / `conteo`.
 4. Cuando el usuario confirme una fecha, quita `"tentativa": true`.
+   Si una tarea termina antes o después de lo planificado, o se mueven sus fechas, guarda primero las originales en `plan: { inicio, fin }` (solo la primera vez: es la línea base) y luego cambia `inicio` / `fin` a lo real.
 5. Corre `npm run cifrar`: valida el archivo y regenera `site/tareas.enc.json`. Corrige cualquier error que reporte.
 6. Haz commit solo de `site/tareas.enc.json` (y del código si cambió). Pregunta antes de hacer push.
 

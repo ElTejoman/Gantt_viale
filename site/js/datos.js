@@ -68,6 +68,16 @@ function finesDeMes(a, b) {
   return out;
 }
 
+// Diferencia entre el fin real y el fin de la línea base (plan original), en días calendario.
+export function textoDesvio(t) {
+  if (!t.plan) return '';
+  const d = Math.abs(t.desvio);
+  const dias = `${d} ${d === 1 ? 'día' : 'días'}`;
+  if (t.desvio === 0) return 'Según lo planificado';
+  if (t.estado === 'terminada') return `Terminó ${dias} ${t.desvio < 0 ? 'antes' : 'después'} de lo planificado`;
+  return `Fin ${t.desvio < 0 ? 'adelantado' : 'corrido'} ${dias} respecto al plan`;
+}
+
 export const normalizarTexto = (s) =>
   (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
@@ -108,8 +118,11 @@ export function normalizar(raw, diaHoy) {
       const avance = avanceDe(t, estado);
       const conPlazo = tipo === 'tarea';
       const atrasada = conPlazo && estado !== 'terminada' && fin < diaHoy;
+      const plan = t.plan ? { inicio: aDia(t.plan.inicio), fin: aDia(t.plan.fin) } : null;
       const tarea = {
         ...t,
+        plan,
+        desvio: plan ? fin - plan.fin : 0,
         estado,
         tipo,
         inicio,
