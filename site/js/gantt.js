@@ -10,6 +10,10 @@ const ALTO_RESUMEN = 6;
 const ALTO_RECURRENTE = 2;
 const ALTO_BASE = 6;
 const DIAMANTE = 10;
+// Commits recientes: puntos apilados en columna sobre su día (3 por columna; si hay más, otra al lado).
+const PUNTO = 10;
+const PASO_PUNTOS = 10;
+const PUNTOS_POR_COLUMNA = 3;
 
 export const ESCALAS = { dia: 36, semana: 12, mes: 3.2 };
 const PPD_MIN = 1.4;
@@ -248,7 +252,7 @@ export class VistaGantt {
 
   establecerFilas(filas) {
     for (const it of this.items) {
-      for (const m of [it.barra, it.base, ...(it.marcas || [])]) m?.material.dispose();
+      for (const m of [it.barra, it.base, ...(it.marcas || []), ...(it.commits || []).map((c) => c.mesh)]) m?.material.dispose();
     }
     this.dinamico.clear();
     this.porId.clear();
@@ -270,6 +274,21 @@ export class VistaGantt {
           m.material.uniforms.uRadius.value = 1.5;
           this.dinamico.add(m);
           return m;
+        });
+        // Commits recientes: un punto por commit en su día, apilados en columna.
+        const porDia = new Map();
+        for (const c of fila.tarea.commitsRecientes || []) porDia.set(c.dia, [...(porDia.get(c.dia) || []), c]);
+        it.commits = [...porDia.values()].flatMap((delDia) => {
+          const n = delDia.length;
+          const columnas = Math.ceil(n / PUNTOS_POR_COLUMNA);
+          return delDia.map((c, k) => {
+            const col = Math.floor(k / PUNTOS_POR_COLUMNA);
+            const enCol = Math.min(PUNTOS_POR_COLUMNA, n - col * PUNTOS_POR_COLUMNA);
+            const mesh = new THREE.Mesh(this.plano, materialBarra());
+            mesh.renderOrder = 21; // encima de la línea de hoy
+            this.dinamico.add(mesh);
+            return { mesh, dia: c.dia, dx: col - (columnas - 1) / 2, dy: (enCol - 1) / 2 - (k % PUNTOS_POR_COLUMNA) };
+          });
         });
         // Línea base: las fechas que se planificaron al inicio, como una línea bajo la barra.
         if (fila.tarea.plan && !fila.espejo) {
@@ -299,6 +318,7 @@ export class VistaGantt {
       plan: c('--gantt-plan'),
       planRelleno: c('--gantt-plan-fill'),
       marca: c('--sum-fill'),
+      commit: c('--gantt-commit'),
       resumen: { pista: c('--sum-track'), relleno: c('--sum-fill') },
       estados: Object.fromEntries(
         ['pendiente', 'en_curso', 'bloqueada', 'terminada'].map((k) => [k, { pista: c(`--bar-${k}-track`), relleno: c(`--bar-${k}-fill`) }]),
@@ -346,6 +366,14 @@ export class VistaGantt {
       u.uFade.value = t.tipo === 'continua' ? 1 : 0;
       u.uOpacity.value = it.fila.espejo ? 0.4 : 1;
       for (const m of it.marcas) m.material.uniforms.uOpacity.value = u.uOpacity.value;
+      for (const { mesh } of it.commits) {
+        const uc = mesh.material.uniforms;
+        uc.uTrack.value.copy(this.colores.commit);
+        uc.uFill.value.copy(this.colores.commit);
+        uc.uRing.value = 1;
+        uc.uRingColor.value.copy(this.colores.superficie);
+        uc.uOpacity.value = u.uOpacity.value;
+      }
       if (it.base) {
         const ub = it.base.material.uniforms;
         ub.uTrack.value.copy(this.colores.planRelleno);
@@ -697,6 +725,17 @@ export class VistaGantt {
           mesh.material.uniforms.uRing.value = sel || pasar ? 1 : 0;
           mesh.material.uniforms.uRingColor.value.copy(this.colores.tinta);
         });
+
+        for (const p of it.commits) {
+          const px = X(p.dia + 0.5) + p.dx * PASO_PUNTOS;
+          const s = PUNTO * g;
+          p.mesh.visible = visible && px > -PUNTO && px < W + PUNTO && s > 0.5;
+          p.mesh.position.set(px, cy + p.dy * PASO_PUNTOS, 0);
+          p.mesh.scale.set(s, s, 1);
+          const um = p.mesh.material.uniforms;
+          um.uSize.value.set(s, s);
+          um.uRadius.value = s / 2;
+        }
 
         if (it.base) {
           const bx0 = X(t.plan.inicio);

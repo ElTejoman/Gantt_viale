@@ -28,6 +28,7 @@
   --gantt-today: #0b0b0b;
   --gantt-dep: #aeada7;
   --gantt-plan: #9c9b94;
+  --gantt-commit: #e5383b;
   --gantt-plan-fill: #f1f0ec;
   --gantt-rec: #c9c8c1;
 
@@ -75,6 +76,7 @@
     --gantt-today: #f0efec;
     --gantt-dep: #64635e;
     --gantt-plan: #7a7973;
+    --gantt-commit: #ff5c5f;
     --gantt-plan-fill: #2a2a28;
     --gantt-rec: #4a4a45;
     --bar-pendiente-track: #2a2a28;
@@ -114,6 +116,7 @@
   --gantt-today: #f0efec;
   --gantt-dep: #64635e;
   --gantt-plan: #7a7973;
+  --gantt-commit: #ff5c5f;
   --gantt-plan-fill: #2a2a28;
   --gantt-rec: #4a4a45;
   --bar-pendiente-track: #2a2a28;
@@ -1034,6 +1037,19 @@ p {
 .sw-terminada { background: var(--bar-terminada-fill); }
 .sw-atrasada { background: var(--bar-pendiente-track); box-shadow: inset 0 0 0 1.5px var(--st-atrasada); }
 .sw-tentativa { width: 18px; height: 8px; }
+.sw.sw-commit,
+.tt-commit {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gantt-commit);
+}
+.tt-commit { margin-right: 6px; vertical-align: middle; }
+.tt-ultimo {
+  max-width: 300px;
+  color: var(--muted);
+}
 .sw-continua { background: linear-gradient(90deg, var(--bar-en_curso-track) 50%, transparent); }
 .sw-mensual {
   width: 8px;

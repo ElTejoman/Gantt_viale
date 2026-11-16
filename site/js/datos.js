@@ -157,6 +157,9 @@ export function normalizar(raw, diaHoy) {
   });
 
   for (const t of todas) t.dependeDe = (t.depende || []).map((id) => porId.get(id)).filter(Boolean);
+  // Últimos commits de los proyectos (los 20 más recientes), cada uno en su tarea: puntos sobre la barra.
+  const recientes = (raw.actividad?.recientes || []).map((c) => ({ ...c, dia: aDia(c.fecha) }));
+  for (const t of todas) t.commitsRecientes = recientes.filter((c) => c.tarea === t.id);
   // Hilo de evolución en sentido inverso: las tareas que retoman a esta.
   for (const t of todas) t.continuaEn = todas.filter((o) => o.dependeDe.includes(t));
   const reuniones = new Map((raw.reuniones || []).map((r) => [r.id, r]));

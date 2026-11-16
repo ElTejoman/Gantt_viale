@@ -17,6 +17,7 @@ const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const RUTA_FUENTES = path.join(raiz, 'data', 'fuentes.json');
 const RUTA_TAREAS = path.join(raiz, 'data', 'tareas.json');
 export const RUTA_ARBOL = path.join(raiz, 'data', 'arbol.json');
+const RECIENTES = 20;
 const RUTA_ESTADO = path.join(raiz, 'data', 'logs_estado.json');
 
 const RE_ID = /\b(?:AUT|DEM|PLA|DIS|MKT|RRHH|COM|INT|ENT)-\d+\b/;
@@ -43,7 +44,7 @@ function leerCommits(clave, repo, desde, ignorar) {
   if (!existsSync(path.join(repo.ruta, '.git'))) throw new Error(`${repo.nombre}: no es un repositorio git (${repo.ruta})`);
   const salida = execFileSync(
     'git',
-    ['-C', repo.ruta, 'log', '--all', '--no-merges', `--since=${desde}`, '--format=%x1e%H%x1f%cs%x1f%s', '--name-only'],
+    ['-C', repo.ruta, 'log', '--all', '--no-merges', `--since=${desde}`, '--format=%x1e%H%x1f%cs%x1f%cI%x1f%s', '--name-only'],
     { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 },
   );
   const vistos = new Set();
@@ -51,7 +52,7 @@ function leerCommits(clave, repo, desde, ignorar) {
   for (const bloque of salida.split('\x1e')) {
     if (!bloque.trim()) continue;
     const [cabecera, ...resto] = bloque.split('\n');
-    const [hash, fecha, asunto] = cabecera.split('\x1f');
+    const [hash, fecha, momento, asunto] = cabecera.split('\x1f');
     if (!asunto || ignorar.some((re) => re.test(sinTildes(asunto)))) continue;
     const dedupe = `${fecha}|${asunto}`;
     if (vistos.has(dedupe)) continue; // el mismo commit copiado a otra rama (deploy/*)
@@ -62,6 +63,7 @@ function leerCommits(clave, repo, desde, ignorar) {
       tipo: 'commit',
       repo: clave,
       fecha,
+      momento,
       ref: hash.slice(0, 7),
       scope: m?.[2] || null,
       asunto,
@@ -231,6 +233,17 @@ export async function leerLogs({ marcarVistos = true } = {}) {
     if (estadoPrevio && !vistos.has(it.clave)) nuevos.push(it);
   }
 
+  // Los últimos commits de todos los proyectos, por hora real: muestran en qué se estaba trabajando.
+  arbol.recientes = items
+    .filter((it) => it.tipo === 'commit')
+    .sort((a, b) => (a.momento < b.momento ? 1 : a.momento > b.momento ? -1 : 0))
+    .slice(0, RECIENTES)
+    .map((it) => ({
+      ...resumirItem(it, fuentes.repos),
+      momento: it.momento,
+      ...(it.destino?.tarea ? { tarea: it.destino.tarea } : it.destino?.proyecto ? { proyecto: it.destino.proyecto } : {}),
+    }));
+
   const primeraLectura = !estadoPrevio;
   await writeFile(RUTA_ARBOL, JSON.stringify(arbol, null, 2) + '\n');
   if (marcarVistos || primeraLectura) {
@@ -253,7 +266,7 @@ export function actividadParaWeb(arbol) {
       if (t.total) tareas[tid] = { total: t.total, commits: t.commits, bitacora: t.bitacora, ultimos: t.ultimos };
     }
   }
-  return { hasta: arbol.hasta, desde: arbol.desde, proyectos, tareas };
+  return { hasta: arbol.hasta, desde: arbol.desde, proyectos, tareas, recientes: arbol.recientes || [] };
 }
 
 // ---------- CLI ----------

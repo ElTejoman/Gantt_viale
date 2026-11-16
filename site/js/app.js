@@ -173,6 +173,12 @@ export function iniciarApp(datos) {
         ${t.beneficiaNombres.length ? `<p class="tt-linea">Para: ${esc(t.beneficiaNombres.join(', '))}</p>` : ''}
         ${t.plan ? `<p class="tt-linea">Plan original: ${fmtRango(t.plan.inicio, t.plan.fin)}</p><p class="tt-linea">${textoDesvio(t)}</p>` : ''}
         ${t.actividad ? `<p class="tt-linea">${t.actividad.total} registros · último ${fmt(t.actividad.ultimos[0].dia)}</p>` : ''}
+        ${
+          t.commitsRecientes.length
+            ? `<p class="tt-linea"><span class="tt-commit"></span>${t.commitsRecientes.length} de los últimos 20 commits</p>
+               <p class="tt-linea tt-ultimo">${fmt(t.commitsRecientes[0].dia)} · ${esc(t.commitsRecientes[0].texto)}</p>`
+            : ''
+        }
         ${t.tentativa ? '<p class="tt-nota">Fecha tentativa</p>' : ''}`;
     }
     tooltip.innerHTML = html;
