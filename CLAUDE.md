@@ -13,6 +13,15 @@ Gantt de seguimiento de tareas que el dueño del repo comparte con su jefe. Siti
 5. Corre `npm run cifrar`: valida el archivo y regenera `site/tareas.enc.json`. Corrige cualquier error que reporte.
 6. Haz commit solo de `site/tareas.enc.json` (y del código si cambió). Pregunta antes de hacer push.
 
+## Conexión entre tareas (siempre)
+
+Para el usuario es clave ver cómo fue evolucionando cada trabajo. Por eso **toda tarea nueva o actualizada se conecta con lo que ya existe**:
+
+- Antes de crearla, busco en `data/tareas.json` (nombre, detalle y bitácora), en `data/arbol.json` y en los docs de los proyectos (`CLAUDE.local.md`) si continúa, mejora o reabre algo. Si es así, pongo `depende: ["ID"]` hacia la tarea base, aunque esté terminada o sea de otro proyecto, y la primera nota de su bitácora dice qué parte retoma.
+- Si nace de una reunión, pongo `origen: ["R-…"]`. Si la aprovecha otra área, pongo `beneficia`. Si espera a otra persona, uso `bloquea` en el pendiente de la reunión.
+- Cada tarea nueva lleva su regla en `data/fuentes.json`, antes de las reglas genéricas que le quitarían los registros, y compruebo que no le quite historial a la tarea base.
+- Al cerrar, le digo al usuario qué conexiones hice. Si encuentro tareas antiguas que deberían estar conectadas y no lo están, se lo propongo.
+
 ## Lectura automática de logs (antes de cualquier cambio)
 
 - Un hook `UserPromptSubmit` (en `.claude/settings.local.json`) corre `scripts/leer_logs.mjs --hook` en cada mensaje del usuario: lee commits y bitácoras de los proyectos, actualiza `data/arbol.json` y me pasa como contexto los **registros nuevos** desde la última lectura, por tarea. Si aparece algo "SIN TAREA", proponer al usuario si es tarea nueva o falta una regla.
