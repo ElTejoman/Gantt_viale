@@ -157,6 +157,15 @@ export function normalizar(raw, diaHoy) {
   });
 
   for (const t of todas) t.dependeDe = (t.depende || []).map((id) => porId.get(id)).filter(Boolean);
+  // Hilo de evolución en sentido inverso: las tareas que retoman a esta.
+  for (const t of todas) t.continuaEn = todas.filter((o) => o.dependeDe.includes(t));
+  const reuniones = new Map((raw.reuniones || []).map((r) => [r.id, r]));
+  for (const t of todas) {
+    t.reunionesOrigen = (t.origen || [])
+      .map((id) => reuniones.get(id))
+      .filter(Boolean)
+      .map((r) => ({ titulo: r.titulo, dia: aDia(r.fecha) }));
+  }
   const nombreProyecto = new Map(proyectos.map((p) => [p.id, p.nombre]));
   for (const t of todas) t.beneficiaNombres = (t.beneficia || []).map((id) => nombreProyecto.get(id)).filter(Boolean);
 

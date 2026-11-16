@@ -870,6 +870,20 @@ p {
   display: grid;
   gap: 8px;
 }
+.deps li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 8px;
+}
+.dep-proyecto,
+.dep-reunion time {
+  color: var(--muted);
+  font-size: 12px;
+}
+.dep-reunion {
+  color: var(--ink);
+}
 .checklist li {
   display: flex;
   gap: 10px;

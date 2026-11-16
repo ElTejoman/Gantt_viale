@@ -270,10 +270,12 @@ export function iniciarApp(datos) {
               .join('')}</ul></section>`
           : ''
       }
+      ${listaConexion('Depende de', t.dependeDe, t)}
+      ${listaConexion('Continúa en', t.continuaEn, t)}
       ${
-        t.dependeDe.length
-          ? `<section><h3>Depende de</h3><ul class="deps">${t.dependeDe
-              .map((d) => `<li><button class="enlace" data-ir="${esc(d.id)}">${icoEstado(d.estado)}${esc(d.nombre)}</button></li>`)
+        t.reunionesOrigen.length
+          ? `<section><h3>Nace de la reunión</h3><ul class="deps">${t.reunionesOrigen
+              .map((r) => `<li class="dep-reunion"><time>${fmt(r.dia, true)}</time><span>${esc(r.titulo)}</span></li>`)
               .join('')}</ul></section>`
           : ''
       }
@@ -290,6 +292,18 @@ export function iniciarApp(datos) {
       }</section>`,
       t.nombre,
     );
+  }
+
+  // Tareas conectadas; si son de otro proyecto, se nombra el proyecto para seguir el hilo entre áreas.
+  function listaConexion(titulo, tareas, t) {
+    if (!tareas.length) return '';
+    return `<section><h3>${titulo}</h3><ul class="deps">${tareas
+      .map(
+        (d) => `<li><button class="enlace" data-ir="${esc(d.id)}">${icoEstado(d.estado)}${esc(d.nombre)}</button>${
+          d.proyectoId !== t.proyectoId ? `<span class="dep-proyecto">${esc(d.proyectoNombre)}</span>` : ''
+        }</li>`,
+      )
+      .join('')}</ul></section>`;
   }
 
   function seccionActividad(t) {
