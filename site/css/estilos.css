@@ -27,6 +27,7 @@
   --gantt-grid-strong: #d9d8d2;
   --gantt-today: #0b0b0b;
   --gantt-dep: #aeada7;
+  --gantt-dep-sel: #6f42e8;
   --gantt-plan: #9c9b94;
   --gantt-commit: #e5383b;
   --gantt-plan-fill: #f1f0ec;
@@ -75,6 +76,7 @@
     --gantt-grid-strong: #33332f;
     --gantt-today: #f0efec;
     --gantt-dep: #64635e;
+    --gantt-dep-sel: #a08cff;
     --gantt-plan: #7a7973;
     --gantt-commit: #ff5c5f;
     --gantt-plan-fill: #2a2a28;
@@ -115,6 +117,7 @@
   --gantt-grid-strong: #33332f;
   --gantt-today: #f0efec;
   --gantt-dep: #64635e;
+  --gantt-dep-sel: #a08cff;
   --gantt-plan: #7a7973;
   --gantt-commit: #ff5c5f;
   --gantt-plan-fill: #2a2a28;
@@ -1075,6 +1078,8 @@ p {
   border-left: 5px solid var(--gantt-dep);
   border-right: 0;
 }
+.sw-dep.sw-dep-sel { height: 2px; background: var(--gantt-dep-sel); }
+.sw-dep.sw-dep-sel::after { top: -2.5px; border-left-color: var(--gantt-dep-sel); }
 
 /* ========== Responsivo ========== */
 @media (max-width: 1100px) {

@@ -153,7 +153,18 @@ function escribirTriangulos(obj, tris) {
   obj.geometry.setDrawRange(0, n * 3);
 }
 
-const leerCss = (estilos, nombre) => new THREE.Color(estilos.getPropertyValue(nombre).trim() || '#888888');
+// Un segmento horizontal o vertical como rectángulo de grosor 2g (las líneas WebGL siempre miden 1 px).
+function trazoGrueso(tris, x1, y1, x2, y2, g) {
+  const horizontal = y1 === y2;
+  const xa = Math.min(x1, x2) - g;
+  const xb = Math.max(x1, x2) + g;
+  const ya = horizontal ? y1 - g : Math.min(y1, y2) - g;
+  const yb = horizontal ? y1 + g : Math.max(y1, y2) + g;
+  const [xi, xd] = horizontal ? [xa, xb] : [x1 - g, x1 + g];
+  tris.push(xi, ya, xd, ya, xd, yb, xi, ya, xd, yb, xi, yb);
+}
+
+const leerCss =(estilos, nombre) => new THREE.Color(estilos.getPropertyValue(nombre).trim() || '#888888');
 const facilidad = (t) => 1 - Math.pow(1 - t, 3);
 
 function marcasDeTiempo(d0, d1, ppd) {
@@ -236,9 +247,10 @@ export class VistaGantt {
     this.lineasMayores = crearLineas(200, 3);
     this.lineasDep = crearLineas(600, 5);
     this.flechasDep = crearTriangulos(200, 5);
+    this.flechasSel = crearTriangulos(800, 8); // dependencias de la tarea seleccionada, encima de las barras
     this.lineaHoy = new THREE.Mesh(this.plano, materialPlano(true));
     this.lineaHoy.renderOrder = 20;
-    e.add(this.finde, this.bandaPasar, this.bandaSel, this.lineasMenores, this.lineasMayores, this.lineasDep, this.flechasDep, this.lineaHoy);
+    e.add(this.finde, this.bandaPasar, this.bandaSel, this.lineasMenores, this.lineasMayores, this.lineasDep, this.flechasDep, this.flechasSel, this.lineaHoy);
   }
 
   // ---------- datos ----------
@@ -333,6 +345,7 @@ export class VistaGantt {
     this.lineasMayores.material.color.copy(c('--gantt-grid-strong'));
     this.lineasDep.material.color.copy(c('--gantt-dep'));
     this.flechasDep.material.color.copy(c('--gantt-dep'));
+    this.flechasSel.material.color.copy(c('--gantt-dep-sel'));
     this.lineaHoy.material.color.copy(c('--gantt-today'));
 
     for (const it of this.items) {
@@ -773,9 +786,12 @@ export class VistaGantt {
     this.lineaHoy.position.set(xh, -H / 2, 0);
     this.lineaHoy.scale.set(1.5, H, 1);
 
-    // Dependencias (fin -> inicio)
+    // Dependencias (fin -> inicio). Las de la tarea seleccionada (de quién depende y qué continúa)
+    // van aparte: más gruesas, con su color y encima de las barras; las demás se atenúan.
     const segs = [];
     const tris = [];
+    const trisSel = [];
+    const idSel = sel?.fila.tipo === 'tarea' ? sel.fila.tarea.id : null;
     for (const it of this.items) {
       if (it.fila.tipo !== 'tarea' || it.fila.espejo) continue;
       const t = it.fila.tarea;
@@ -787,18 +803,29 @@ export class VistaGantt {
         const xe = X(t.inicio) - 1;
         const ye = centroY(it.i);
         const gap = 7;
+        const ruta = [];
         if (xe - xs >= gap * 2) {
           const xm = xs + gap;
-          segs.push(xs, ys, xm, ys, xm, ys, xm, ye, xm, ye, xe, ye);
+          ruta.push(xs, ys, xm, ys, xm, ys, xm, ye, xm, ye, xe, ye);
         } else {
           const ym = ys + (ye < ys ? -FILA / 2 : FILA / 2);
-          segs.push(xs, ys, xs + gap, ys, xs + gap, ys, xs + gap, ym, xs + gap, ym, xe - gap, ym, xe - gap, ym, xe - gap, ye, xe - gap, ye, xe, ye);
+          ruta.push(xs, ys, xs + gap, ys, xs + gap, ys, xs + gap, ym, xs + gap, ym, xe - gap, ym, xe - gap, ym, xe - gap, ye, xe - gap, ye, xe, ye);
         }
-        tris.push(xe + 0.5, ye, xe - 5, ye + 3.5, xe - 5, ye - 3.5);
+        if (idSel && (t.id === idSel || pre.id === idSel)) {
+          for (let k = 0; k < ruta.length; k += 4) trazoGrueso(trisSel, ruta[k], ruta[k + 1], ruta[k + 2], ruta[k + 3], 1);
+          trisSel.push(xe + 1.5, ye, xe - 6, ye + 4.5, xe - 6, ye - 4.5);
+        } else {
+          segs.push(...ruta);
+          tris.push(xe + 0.5, ye, xe - 5, ye + 3.5, xe - 5, ye - 3.5);
+        }
       }
     }
+    const atenuar = trisSel.length ? 0.35 : 1;
+    this.lineasDep.material.opacity = atenuar;
+    this.flechasDep.material.opacity = atenuar;
     escribirLineas(this.lineasDep, segs);
     escribirTriangulos(this.flechasDep, tris);
+    escribirTriangulos(this.flechasSel, trisSel);
 
     return animando;
   }
