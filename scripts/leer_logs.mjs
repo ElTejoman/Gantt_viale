@@ -20,7 +20,7 @@ export const RUTA_ARBOL = path.join(raiz, 'data', 'arbol.json');
 const RECIENTES = 20;
 const RUTA_ESTADO = path.join(raiz, 'data', 'logs_estado.json');
 
-const RE_ID = /\b(?:AUT|DEM|PLA|DIS|MKT|RRHH|COM|INT|ENT)-\d+\b/;
+const RE_ID = /\b(?:AUT|DEM|PLA|DIS|MKT|RRHH|COM|INT|SEG|FIN|ENT)-\d+\b/;
 const RE_CONVENCIONAL = /^([a-z]+)(?:\(([^)]+)\))?!?:\s*/i;
 const ESTADO_EMOJI = { '🟢': 'produccion', '🟡': 'local', '⚪': 'sin_desarrollo' };
 
